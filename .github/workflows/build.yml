@@ -37,14 +37,6 @@ jobs:
       - name: Merge Vendor Sources
         run: rsync -a vendor_source/vendor/oplus/kernel/ kernel/
 
-      # 5. Kconfigの間違ったパスを全て自動修正
-      - name: Recursively Patch All Kconfig Paths
-        run: |
-          find kernel -name "Kconfig" -type f -exec sed -i 's|source "kernel/oplus_cpu/|source "|g' {} +
-          find kernel -name "Kconfig" -type f -exec sed -i 's|source "vendor/oplus/|source "oplus/|g' {} +
-          find kernel -name "Kconfig" -type f -exec sed -i 's|source "mm/mm_osvelte/|source "mm_osvelte/|g' {} +
-          echo "All Kconfig files have been patched."
-
       # 6. ビルド用の環境変数を設定
       - name: Set Build Environment
         run: |
