@@ -21,6 +21,8 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
+          cd $GITHUB_WORKSPACE
+          make mrproper
           make O=out oplus_debug_defconfig
           make O=out defconfig
           echo "CONFIG_KSU=y" >> out/.config
