@@ -30,14 +30,14 @@ jobs:
           make -C kernel O=out oplus_debug_defconfig
           
           # ビルド設定を生成
-          make -C kernel O=out defconfig
+          make O=out defconfig
           
           # KernelSUとsusfsを有効化
           echo "CONFIG_KSU=y" >> kernel/out/.config
           echo "CONFIG_SUSFS=y" >> kernel/out/.config
           
           # ビルドを実行
-          make -C kernel O=out -j$(nproc --all)
+          make O=out -j$(nproc --all)
 
       # 8. 完成したカーネルイメージをアップロード
       - name: Upload Kernel Image
