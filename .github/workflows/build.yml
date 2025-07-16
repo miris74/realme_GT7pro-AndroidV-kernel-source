@@ -24,7 +24,6 @@ jobs:
       - name: Build Kernel
         run: |
           cd kernel  # 必要に応じてディレクトリ名を修正
-          make mrproper
           make O=out oplus_debug_defconfig
           make O=out defconfig
           echo "CONFIG_KSU=y" >> out/.config
