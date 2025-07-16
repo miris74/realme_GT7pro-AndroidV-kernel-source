@@ -31,7 +31,11 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          cd kernel  # 必要に応じてディレクトリ名を修正
+          cd kernel
+          pwd # 現在のディレクトリを確認
+          ls -l Init/Kconfig # Init/Kconfig が存在することを確認
+          ls -l oplus_cpu/Kconfig # oplus_cpu/Kconfig が存在することを確認
+          ls -l kernel/oplus_cpu/Kconfig # Kconfigが探しているパスを確認 (もし 'kernel/' ディレクトリの下にいる場合)
           make O=out oplus_debug_defconfig
           make O=out defconfig
           echo "CONFIG_KSU=y" >> out/.config
