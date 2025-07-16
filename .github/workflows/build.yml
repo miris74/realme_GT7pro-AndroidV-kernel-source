@@ -27,7 +27,7 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          make -C kernel O=out oplus_debug_defconfig
+          make O=out oplus_debug_defconfig
           
           # ビルド設定を生成
           make O=out defconfig
