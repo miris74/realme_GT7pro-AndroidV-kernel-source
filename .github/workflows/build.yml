@@ -21,7 +21,7 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          cd $GITHUB_WORKSPACE
+          cd kernel  # 必要に応じてディレクトリ名を修正
           make mrproper
           make O=out oplus_debug_defconfig
           make O=out defconfig
