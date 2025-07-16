@@ -34,7 +34,7 @@ jobs:
           echo "KBUILD_BUILD_USER=GitHubActions" >> $GITHUB_ENV
           echo "KBUILD_BUILD_HOST=GitHub" >> $GITHUB_ENV
           echo "CC=clang" >> $GITHUB_ENV
-          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV [cite: 3]
+          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
 
       # 7. カーネルのビルド
       - name: Build Kernel
@@ -44,18 +44,18 @@ jobs:
           make O=out defconfig
           echo "CONFIG_KSU=y" >> out/.config
           echo "CONFIG_SUSFS=y" >> out/.config
-          make O=out -j$(nproc --all) [cite: 4]
+          make O=out -j$(nproc --all) 
           # ... (以下のパスも必要に応じて調整してください)
           # path: out/arch/arm64/boot/Image # この行は `make` の後に続く別の設定ブロックかと思われます。
           
           echo "CONFIG_KSU=y" >> kernel/out/.config # このパスも注意
-          [cite_start]echo "CONFIG_SUSFS=y" >> kernel/out/.config # このパスも注意 [cite: 5]
+          echo "CONFIG_SUSFS=y" >> kernel/out/.config # このパスも注意 [cite: 5]
           
-          [cite_start]make O=out -j$(nproc --all) [cite: 5]
+          make O=out -j$(nproc --all)
 
       # 8. 完成したカーネルイメージをアップロード
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
         with:
           name: kernel-image
-          [cite_start]path: kernel/out/arch/arm64/boot/Image [cite: 6]
+          path: kernel/out/arch/arm64/boot/Image
