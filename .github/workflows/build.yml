@@ -9,13 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    
     steps:
-      # 1. 必要なパッケージをインストール
-      - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm curl git
-
-      # 6. ビルド用の環境変数を設定
       - name: Set Build Environment
         run: |
           echo "ARCH=arm64" >> $GITHUB_ENV
@@ -28,9 +22,11 @@ jobs:
       - name: Build Kernel
         run: |
           make O=out oplus_debug_defconfig
-          
-          # ビルド設定を生成
           make O=out defconfig
+          echo "CONFIG_KSU=y" >> out/.config
+          echo "CONFIG_SUSFS=y" >> out/.config
+          make O=out -j$(nproc --all)
+          path: out/arch/arm64/boot/Image
           
           # KernelSUとsusfsを有効化
           echo "CONFIG_KSU=y" >> kernel/out/.config
