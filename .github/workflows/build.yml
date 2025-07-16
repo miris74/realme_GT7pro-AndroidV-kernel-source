@@ -21,13 +21,6 @@ jobs:
           path: kernel
           fetch-depth: 0
 
-      # Init/Kconfig を kernel ディレクトリの直下にコピーするステップを追加
-      - name: Copy Init/Kconfig to kernel directory
-        run: |
-          cp Init/Kconfig kernel/Init/Kconfig
-          # または、Init/Kconfigがリポジトリのルートにある場合
-          # cp ${{ github.workspace }}/Init/Kconfig ${{ github.workspace }}/kernel/Init/Kconfig
-
       - name: Set Build Environment
         run: |
           echo "ARCH=arm64" >> $GITHUB_ENV
