@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: realme-kernel-opensource/realme_GT7pro-AndroidV-kernel-source
-          path: kernel
+          # path: kernel
           fetch-depth: 0
       - name: Set Build Environment
         run: |
@@ -31,7 +31,7 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          cd kernel
+          # cd kernel
           pwd # 現在のディレクトリを確認
           ls -l Init/Kconfig # Init/Kconfig が存在することを確認
           ls -l oplus_cpu/Kconfig # oplus_cpu/Kconfig が存在することを確認
