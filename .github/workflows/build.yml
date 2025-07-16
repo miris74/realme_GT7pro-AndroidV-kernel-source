@@ -27,8 +27,7 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          # URLからdefconfigを直接ダウンロード
-          curl -L -o kernel/arch/arm64/configs/defconfig "https://raw.githubusercontent.com/miris74/realme_GT7pro-AndroidV-kernel-source/master/arch/arm64/configs/oplus_debug_defconfig"
+          make -C kernel O=out oplus_debug_defconfig
           
           # ビルド設定を生成
           make -C kernel O=out defconfig
