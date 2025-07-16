@@ -22,24 +22,6 @@ jobs:
           submodules: 'recursive'
           path: kernel  # この一行が抜けていたことが全ての原因でした
 
-      # 3. vendor（メーカー独自）のソースコードを `vendor_source` フォルダにチェックアウト
-      - name: Checkout Vendor Source
-        uses: actions/checkout@v4
-        with:
-          repository: realme-kernel-opensource/realme_GT7pro-AndroidV-vendor-source
-          path: vendor_source
-          fetch-depth: 1
-
-      # 4. 不足しているフォルダを物理的に移動
-      - name: Move Vendor Sources
-        run: mv vendor_source/vendor/oplus/kernel/cpu kernel/oplus_cpu
-
-      # 5. Kconfigの間違ったパスを2段階で修正
-      - name: Patch Kconfig Paths
-        run: |
-          sed -i 's|source "kernel/oplus_cpu/Kconfig"|source "oplus_cpu/Kconfig"|' kernel/init/Kconfig
-          sed -i 's|source "kernel/oplus_cpu/cpufreq_health/Kconfig"|source "cpufreq_health/Kconfig"|' kernel/oplus_cpu/Kconfig
-
       # 6. ビルド用の環境変数を設定
       - name: Set Build Environment
         run: |
