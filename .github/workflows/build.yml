@@ -31,6 +31,9 @@ jobs:
           fetch-depth: 1
 
       # 4. vendorのソースをカーネルソースにマージ (★★最終修正★★)
+      - name: Copy oplus_debug_defconfig
+        run: |
+          cp vendor_source/vendor/oplus/kernel/oplus/oplus_debug_defconfig kernel/oplus/
       - name: Merge Vendor Sources
         run: rsync -a vendor_source/vendor/oplus/kernel/ kernel/
 
