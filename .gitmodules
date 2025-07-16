@@ -1,0 +1,3 @@
+[submodule "kernel/drivers/susfs"]
+	path = kernel/drivers/susfs
+	url = https://github.com/sidex15/susfs4ksu-module.git
