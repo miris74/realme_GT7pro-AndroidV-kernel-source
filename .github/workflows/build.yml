@@ -11,46 +11,51 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm curl git unzip
+        [cite_start]run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm curl git unzip [cite: 1]
       - name: Checkout repository
-        uses: actions/checkout@v4
+        [cite_start]uses: actions/checkout@v4 [cite: 1]
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
           repository: realme-kernel-opensource/realme_GT7pro-AndroidV-kernel-source
           path: kernel
-          fetch-depth: 0
+          [cite_start]fetch-depth: 0 [cite: 2]
+
+      # Init/Kconfig を kernel ディレクトリの直下にコピーするステップを追加
+      - name: Copy Init/Kconfig to kernel directory
+        run: |
+          cp Init/Kconfig kernel/Init/Kconfig
+          # または、Init/Kconfigがリポジトリのルートにある場合
+          # cp ${{ github.workspace }}/Init/Kconfig ${{ github.workspace }}/kernel/Init/Kconfig
+
       - name: Set Build Environment
         run: |
           echo "ARCH=arm64" >> $GITHUB_ENV
           echo "KBUILD_BUILD_USER=GitHubActions" >> $GITHUB_ENV
           echo "KBUILD_BUILD_HOST=GitHub" >> $GITHUB_ENV
           echo "CC=clang" >> $GITHUB_ENV
-          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
+          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV [cite: 3]
 
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          ls -l Init/Kconfig # Init/Kconfig が存在することを確認
-          ls -l oplus_cpu/Kconfig # oplus_cpu/Kconfig が存在することを確認
-          ls -l kernel/oplus_cpu/Kconfig # Kconfigが探しているパスを確認 (もし 'kernel/' ディレクトリの下にいる場合)
+          cd kernel  # この時、Init/Kconfig が kernel ディレクトリの中にあることを期待
           make O=out oplus_debug_defconfig
           make O=out defconfig
           echo "CONFIG_KSU=y" >> out/.config
           echo "CONFIG_SUSFS=y" >> out/.config
-          make O=out -j$(nproc --all)
-          path: out/arch/arm64/boot/Image
+          make O=out -j$(nproc --all) [cite: 4]
+          # ... (以下のパスも必要に応じて調整してください)
+          # path: out/arch/arm64/boot/Image # この行は `make` の後に続く別の設定ブロックかと思われます。
           
-          # KernelSUとsusfsを有効化
-          echo "CONFIG_KSU=y" >> kernel/out/.config
-          echo "CONFIG_SUSFS=y" >> kernel/out/.config
+          echo "CONFIG_KSU=y" >> kernel/out/.config # このパスも注意
+          [cite_start]echo "CONFIG_SUSFS=y" >> kernel/out/.config # このパスも注意 [cite: 5]
           
-          # ビルドを実行
-          make O=out -j$(nproc --all)
+          [cite_start]make O=out -j$(nproc --all) [cite: 5]
 
       # 8. 完成したカーネルイメージをアップロード
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
         with:
           name: kernel-image
-          path: kernel/out/arch/arm64/boot/Image
+          [cite_start]path: kernel/out/arch/arm64/boot/Image [cite: 6]
