@@ -1,4 +1,4 @@
-name: Build Kernel - Final Solution
+name: Build Kernel - The Final One
 
 on:
   push:
@@ -11,16 +11,16 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-      # 1. 必要なパッケージをインストール (rsyncを追加)
+      # 1. 必要なパッケージをインストール
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm curl git rsync
+        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm curl git
 
-      # 2. カーネル本体のソースコードを `kernel` フォルダにチェックアウト
+      # 2. カーネル本体のソースコードを `kernel` フォルダにチェックアウト (★★最終修正★★)
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-          path: kernel
+          path: kernel  # この一行が抜けていたことが全ての原因でした
 
       # 3. vendor（メーカー独自）のソースコードを `vendor_source` フォルダにチェックアウト
       - name: Checkout Vendor Source
@@ -30,12 +30,15 @@ jobs:
           path: vendor_source
           fetch-depth: 1
 
-      # 4. vendorのソースをカーネルソースにマージ (★★最終修正★★)
-      - name: Copy oplus_debug_defconfig
+      # 4. 不足しているフォルダを物理的に移動
+      - name: Move Vendor Sources
+        run: mv vendor_source/vendor/oplus/kernel/cpu kernel/oplus_cpu
+
+      # 5. Kconfigの間違ったパスを2段階で修正
+      - name: Patch Kconfig Paths
         run: |
-          cp vendor_source/vendor/oplus/kernel/oplus/oplus_debug_defconfig kernel/oplus/
-      - name: Merge Vendor Sources
-        run: rsync -a vendor_source/vendor/oplus/kernel/ kernel/
+          sed -i 's|source "kernel/oplus_cpu/Kconfig"|source "oplus_cpu/Kconfig"|' kernel/init/Kconfig
+          sed -i 's|source "kernel/oplus_cpu/cpufreq_health/Kconfig"|source "cpufreq_health/Kconfig"|' kernel/oplus_cpu/Kconfig
 
       # 6. ビルド用の環境変数を設定
       - name: Set Build Environment
@@ -49,9 +52,17 @@ jobs:
       # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          make -C kernel O=out oplus/oplus_debug_defconfig
+          # URLからdefconfigを直接ダウンロード
+          curl -L -o kernel/arch/arm64/configs/defconfig "https://raw.githubusercontent.com/miris74/realme_GT7pro-AndroidV-kernel-source/master/arch/arm64/configs/oplus_debug_defconfig"
+          
+          # ビルド設定を生成
+          make -C kernel O=out defconfig
+          
+          # KernelSUとsusfsを有効化
           echo "CONFIG_KSU=y" >> kernel/out/.config
           echo "CONFIG_SUSFS=y" >> kernel/out/.config
+          
+          # ビルドを実行
           make -C kernel O=out -j$(nproc --all)
 
       # 8. 完成したカーネルイメージをアップロード
