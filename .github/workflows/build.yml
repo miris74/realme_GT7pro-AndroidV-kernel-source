@@ -1,0 +1,56 @@
+name: Build Kernel
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      # 1. 必要なパッケージをインストール
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm
+
+      # 2. 修正したソースコードとサブモジュール（susfs）をチェックアウト
+      - name: Checkout Source Code and Submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      # 3. ビルド用の環境変数を設定
+      - name: Set Build Environment
+        run: |
+          echo "ARCH=arm64" >> $GITHUB_ENV
+          echo "KBUILD_BUILD_USER=GitHubActions" >> $GITHUB_ENV
+          echo "KBUILD_BUILD_HOST=GitHub" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
+
+      # 4. カーネルのビルド
+      - name: Build Kernel
+        run: |
+          # リポジトリは修正済みのため、複雑な準備は一切不要です
+          
+          # 1. 使用するdefconfigを、デフォルトの場所にコピーして強制的に認識させます
+          cp kernel/arch/arm64/configs/oplus_debug_defconfig kernel/arch/arm64/configs/defconfig
+          
+          # 2. デフォルトのdefconfigを使ってビルド設定を生成します
+          make -C kernel O=out defconfig
+          
+          # 3. KernelSUとsusfsを有効化します
+          echo "CONFIG_KSU=y" >> kernel/out/.config
+          echo "CONFIG_SUSFS=y" >> kernel/out/.config
+          
+          # 4. ビルドを実行します
+          make -C kernel O=out -j$(nproc --all)
+
+      # 5. 完成したカーネルイメージをアップロード
+      - name: Upload Kernel Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-image
+          path: kernel/out/arch/arm64/boot/Image
