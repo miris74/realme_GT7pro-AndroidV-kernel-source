@@ -1,4 +1,4 @@
-name: Build Kernel
+name: Build Kernel - Final Solution
 
 on:
   push:
@@ -11,17 +11,38 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-      # 1. 必要なパッケージをインストール
+      # 1. 必要なパッケージをインストール (rsyncを追加)
       - name: Install Dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm
+        run: sudo apt-get update && sudo apt-get install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev bc clang llvm curl git rsync
 
-      # 2. 修正したソースコードとサブモジュール（susfs）をチェックアウト
-      - name: Checkout Source Code and Submodules
+      # 2. カーネル本体のソースコードを `kernel` フォルダにチェックアウト
+      - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+          path: kernel
 
-      # 3. ビルド用の環境変数を設定
+      # 3. vendor（メーカー独自）のソースコードを `vendor_source` フォルダにチェックアウト
+      - name: Checkout Vendor Source
+        uses: actions/checkout@v4
+        with:
+          repository: realme-kernel-opensource/realme_GT7pro-AndroidV-vendor-source
+          path: vendor_source
+          fetch-depth: 1
+
+      # 4. vendorのソースをカーネルソースにマージ (★★最終修正★★)
+      - name: Merge Vendor Sources
+        run: rsync -a vendor_source/vendor/oplus/kernel/ kernel/
+
+      # 5. Kconfigの間違ったパスを全て自動修正
+      - name: Recursively Patch All Kconfig Paths
+        run: |
+          find kernel -name "Kconfig" -type f -exec sed -i 's|source "kernel/oplus_cpu/|source "|g' {} +
+          find kernel -name "Kconfig" -type f -exec sed -i 's|source "vendor/oplus/|source "oplus/|g' {} +
+          find kernel -name "Kconfig" -type f -exec sed -i 's|source "mm/mm_osvelte/|source "mm_osvelte/|g' {} +
+          echo "All Kconfig files have been patched."
+
+      # 6. ビルド用の環境変数を設定
       - name: Set Build Environment
         run: |
           echo "ARCH=arm64" >> $GITHUB_ENV
@@ -30,25 +51,15 @@ jobs:
           echo "CC=clang" >> $GITHUB_ENV
           echo "CLANG_TRIPLE=aarch64-linux-gnu-" >> $GITHUB_ENV
 
-      # 4. カーネルのビルド
+      # 7. カーネルのビルド
       - name: Build Kernel
         run: |
-          # リポジトリは修正済みのため、複雑な準備は一切不要です
-          
-          # 1. 使用するdefconfigを、デフォルトの場所にコピーして強制的に認識させます
-          cp kernel/arch/arm64/configs/oplus_debug_defconfig kernel/arch/arm64/configs/defconfig
-          
-          # 2. デフォルトのdefconfigを使ってビルド設定を生成します
-          make -C kernel O=out defconfig
-          
-          # 3. KernelSUとsusfsを有効化します
+          make -C kernel O=out oplus/oplus_debug_defconfig
           echo "CONFIG_KSU=y" >> kernel/out/.config
           echo "CONFIG_SUSFS=y" >> kernel/out/.config
-          
-          # 4. ビルドを実行します
           make -C kernel O=out -j$(nproc --all)
 
-      # 5. 完成したカーネルイメージをアップロード
+      # 8. 完成したカーネルイメージをアップロード
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
         with:
